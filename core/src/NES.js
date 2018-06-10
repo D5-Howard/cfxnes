@@ -6,36 +6,36 @@ import {APU} from './audio';
 
 /**
  * Main component of the emulator.
- * Connects all other components together and provides base emulator API.
+ * It connects all other components together and provides base emulator API.
  */
 export default class NES {
 
   /**
    * Constructor.
    *
-   * @param {!Object=} units - custom implementation of some internal units
+   * @param {!Object=} units Custom implementation of NES internal units.
    */
   constructor(units = {}) {
     log.info('Initializing NES');
 
-    /** @type {!Object} CPU */
+    /** @private @const {!Object} CPU. */
     this.cpu = units.cpu || new CPU;
-    /** @type {!Object} PPU */
+    /** @private @const {!Object} PPU. */
     this.ppu = units.ppu || new PPU;
-    /** @type {!Object} APU */
+    /** @private @const {!Object} APU. */
     this.apu = units.apu || new APU;
-    /** @type {!Object} DMA */
+    /** @private @const {!Object} DMA. */
     this.dma = units.dma || new DMA;
-    /** @type {!Object} CPU memory  */
+    /** @private @const {!Object} CPU memory. */
     this.cpuMemory = units.cpuMemory || new CPUMemory;
-    /** @type {!Object} PPU memory */
+    /** @private @const {!Object} PPU memory. */
     this.ppuMemory = units.ppuMemory || new PPUMemory;
 
-    /** @type {?Object} currently loaded cartridge */
+    /** @private {?Object} Currently loaded cartridge. */
     this.cartridge = null;
-    /** @type {?Object} memory mapper for cartridge */
+    /** @private {?Object} Memory mapper for cartridge. */
     this.mapper = null;
-    /** @type {?string} region that overrides auto-detected value from cartridge */
+    /** @private {?string} Region that overrides auto-detected value from cartridge. */
     this.region = null;
 
     this.connectUnits();
@@ -44,6 +44,8 @@ export default class NES {
 
   /**
    * Connects all units to NES.
+   *
+   * @private
    */
   connectUnits() {
     this.cpu.connect(this);
@@ -54,7 +56,9 @@ export default class NES {
   }
 
   /**
-   * Resets all units to their initial state (HW reset).
+   * Resets all units to their initial state.
+   *
+   * @private
    */
   resetUnits() {
     this.cpuMemory.reset();
@@ -87,7 +91,7 @@ export default class NES {
   /**
    * Sets region that will override auto-detected value from cartridge.
    *
-   * @param {?string} region - region or null to enable its auto-detection
+   * @param {?string} region Region or null to enable its auto-detection.
    */
   setRegion(region) {
     this.region = region;
@@ -97,7 +101,7 @@ export default class NES {
   /**
    * Returns enforced region.
    *
-   * @returns {?string} region o null if its auto-detection is enabled
+   * @returns {?string} Region o null if its auto-detection is enabled.
    */
   getRegion() {
     return this.region;
@@ -111,7 +115,7 @@ export default class NES {
    *   2. Region auto-detected from cartridge.
    *   3. NTSC region (fallback).
    *
-   * @returns {string} region
+   * @returns {string} Region.
    */
   getUsedRegion() {
     return this.region || (this.cartridge && this.cartridge.region) || Region.NTSC;
@@ -119,6 +123,8 @@ export default class NES {
 
   /**
    * Applies parameters of the currently used region to emulator components.
+   *
+   * @private
    */
   applyRegion() {
     log.info('Updating region parameters');
@@ -140,7 +146,7 @@ export default class NES {
    *
    * Setting null value will only remove the current cartridge.
    *
-   * @param {?Object} cartridge - cartridge or null
+   * @param {?Object} cartridge Cartridge or null.
    */
   setCartridge(cartridge) {
     if (this.cartridge) {
@@ -154,6 +160,8 @@ export default class NES {
 
   /**
    * Removes the current cartridge.
+   *
+   * @private
    */
   removeCartridge() {
     log.info('Removing current cartridge');
@@ -165,7 +173,8 @@ export default class NES {
   /**
    * Inserts new cartridge.
    *
-   * @param {!Object} cartridge - cartridge
+   * @private
+   * @param {!Object} cartridge Cartridge.
    */
   insertCartridge(cartridge) {
     log.info('Inserting cartridge');
@@ -178,7 +187,7 @@ export default class NES {
   /**
    * Returns the currently loaded cartridge.
    *
-   * @returns {?Object} cartridge or null if none is loaded
+   * @returns {?Object} Cartridge or null if none is loaded.
    */
   getCartridge() {
     return this.cartridge;
@@ -187,8 +196,8 @@ export default class NES {
   /**
    * Sets input device connected to a port.
    *
-   * @param {number} port - port number
-   * @param {?Object} device - device or null
+   * @param {number} port Port number.
+   * @param {?Object} device Device or null.
    */
   setInputDevice(port, device) {
     const oldDevice = this.cpuMemory.getInputDevice(port);
@@ -204,8 +213,8 @@ export default class NES {
   /**
    * Returns input device connected to a port.
    *
-   * @param {number} port - port number
-   * @returns {?Object} device or null
+   * @param {number} port Port number.
+   * @returns {?Object} Device or null.
    */
   getInputDevice(port) {
     return this.cpuMemory.getInputDevice(port);
@@ -214,7 +223,7 @@ export default class NES {
   /**
    * Sets color palette used for video rendering.
    *
-   * @param {!Uint32Array} palette - palette of 64 colors
+   * @param {!Uint32Array} palette Palette of 64 colors.
    */
   setPalette(palette) {
     this.ppu.setBasePalette(palette);
@@ -223,7 +232,7 @@ export default class NES {
   /**
    * Returns color palette used for video rendering.
    *
-   * @returns {?Uint32Array} palette of 64 colors
+   * @returns {?Uint32Array} Palette of 64 colors.
    */
   getPalette() {
     return this.ppu.getBasePalette();
@@ -233,7 +242,7 @@ export default class NES {
    * Emulates one frame and renders it into provided buffer.
    * In case there is no loaded cartridge, it renders only white noise.
    *
-   * @param {!Uint32Array} buffer - buffer of length 320 * 240
+   * @param {!Uint32Array} buffer Buffer of length 320 * 240.
    */
   renderFrame(buffer) {
     if (this.cartridge) {
@@ -252,7 +261,7 @@ export default class NES {
    * and palettes. In case there is no loaded cartridge, it fills the
    * buffer with black color.
    *
-   * @param {!Uint32Array} buffer - buffer of length 320 * 240
+   * @param {!Uint32Array} buffer Buffer of length 320 * 240.
    */
   renderDebugFrame(buffer) {
     if (this.cartridge) {
@@ -266,7 +275,8 @@ export default class NES {
   /**
    * Renders white noise into provided buffer.
    *
-   * @param {!Uint32Array} buffer - buffer of length 320 * 240
+   * @private
+   * @param {!Uint32Array} buffer Buffer of length 320 * 240.
    */
   renderWhiteNoise(buffer) {
     for (let i = 0; i < buffer.length; i++) {
@@ -278,7 +288,8 @@ export default class NES {
   /**
    * Fills provided buffer with black color.
    *
-   * @param {!Uint32Array} buffer - buffer of length 320 * 240
+   * @private
+   * @param {!Uint32Array} buffer Buffer of length 320 * 240.
    */
   renderEmptyFrame(buffer) {
     buffer.fill(BLACK_COLOR);
@@ -287,7 +298,7 @@ export default class NES {
   /**
    * Sets rate of generated audio samples.
    *
-   * @param {number} rate - number of samples per second
+   * @param {number} rate Number of samples per second.
    */
   setAudioSampleRate(rate) {
     this.apu.setSampleRate(rate);
@@ -296,7 +307,7 @@ export default class NES {
   /**
    * Returns rate of generated audio samples.
    *
-   * @returns {number} number of samples per second
+   * @returns {number} Number of samples per second.
    */
   getAudioSampleRate() {
     return this.apu.getSampleRate();
@@ -306,7 +317,7 @@ export default class NES {
    * Sets callback that will consume generated audio samples.
    * Setting null will disable generation of audio samples.
    *
-   * @param {?function(number)} callback - callback or null
+   * @param {?function(number)} callback Callback or null.
    */
   setAudioCallback(callback) {
     this.apu.setCallback(callback);
@@ -315,7 +326,7 @@ export default class NES {
   /**
    * Returns callback that consumes generated audio samples.
    *
-   * @returns {?function(number)} callback or null
+   * @returns {?function(number)} Callback or null.
    */
   getAudioCallback() {
     return this.apu.getCallback();
@@ -324,8 +335,8 @@ export default class NES {
   /**
    * Sets volume of an audio channel.
    *
-   * @param {number} channel - channel number (0 - 4)
-   * @param {number} volume - volume (0.0 - 1.0)
+   * @param {number} channel Channel number (0 - 4).
+   * @param {number} volume Volume (0.0 - 1.0).
    */
   setAudioVolume(channel, volume) {
     this.apu.setVolume(channel, volume);
@@ -334,8 +345,8 @@ export default class NES {
   /**
    * Returns volume of an audio channel.
    *
-   * @param {number} channel - channel number (0 - 4)
-   * @returns {number} volume (0.0 - 1.0)
+   * @param {number} channel Channel number (0 - 4).
+   * @returns {number} Volume (0.0 - 1.0).
    */
   getAudioVolume(channel) {
     return this.apu.getVolume(channel);
@@ -345,7 +356,7 @@ export default class NES {
    * Returns Non-volatile RAM (NVRAM).
    * Modifications to the returned array will affect contents of NVRAM.
    *
-   * @return {?Uint8Array} array or null if NVRAM is not present
+   * @return {?Uint8Array} Array or null if NVRAM is not present.
    */
   getNVRAM() {
     return this.mapper ? this.mapper.getNVRAM() : null;
